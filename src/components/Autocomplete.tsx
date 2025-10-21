@@ -40,7 +40,7 @@ export const Autocomplete: React.FC<Props> = ({
     }, 300);
 
     return () => clearTimeout(timeout);
-  }, [inputValue]);
+  }, [inputValue, filtredPeoples]);
 
   return (
     <div className={cn('dropdown', { 'is-active': isOpen })}>
