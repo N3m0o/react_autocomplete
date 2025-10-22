@@ -15,15 +15,17 @@ export const Autocomplete: React.FC<Props> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [filteredPeople, setFilteredPeople] = useState<Person[]>(peopleFromServer);
+  const [filteredPeople, setFilteredPeople] =
+    useState<Person[]>(peopleFromServer);
 
-  const lastQueryRef = useRef(''); 
+  const lastQueryRef = useRef('');
 
   const filterPeople = (inputFilterValue: string) => {
     const trimmedValue = inputFilterValue.trim();
 
     if (trimmedValue === '') {
       setFilteredPeople(peopleFromServer);
+
       return;
     }
 
@@ -36,6 +38,7 @@ export const Autocomplete: React.FC<Props> = ({
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
+
     setInputValue(newValue);
     onSelected(null);
 
@@ -45,7 +48,6 @@ export const Autocomplete: React.FC<Props> = ({
   };
 
   const handleBlur = () => {
-    
     window.setTimeout(() => setIsOpen(false), 100);
   };
 
@@ -75,7 +77,7 @@ export const Autocomplete: React.FC<Props> = ({
           type="text"
           placeholder="Enter a part of the name"
           className="input"
-          data-cy="search-input"
+          data-qa="search-input"
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
@@ -88,13 +90,13 @@ export const Autocomplete: React.FC<Props> = ({
         />
       </div>
 
-      <div className="dropdown-menu" role="menu" data-cy="suggestions-list">
+      <div className="dropdown-menu" role="menu" data-qa="suggestions-list">
         <div className="dropdown-content">
           {filteredPeople.map(person => (
             <div
               key={person.slug}
               className="dropdown-item"
-              data-cy="suggestion-item"
+              data-qa="suggestion-item"
               onClick={() => {
                 setInputValue(person.name);
                 setIsOpen(false);
@@ -122,7 +124,7 @@ export const Autocomplete: React.FC<Props> = ({
                 is-align-self-flex-start
               "
               role="alert"
-              data-cy="no-suggestions-message"
+              data-qa="no-suggestions-message"
             >
               <p className="has-text-danger">No matching suggestions</p>
             </div>
