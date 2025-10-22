@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import cn from 'classNames';
+import React, { useEffect, useState, useRef } from 'react';
+import cn from 'classnames';
 import { Person } from '../types/Person';
 
 type Props = {
@@ -10,37 +10,63 @@ type Props = {
 
 export const Autocomplete: React.FC<Props> = ({
   peopleFromServer,
+  delay = 300,
   onSelected,
 }) => {
-  const [inputValue, setInputValue] = useState<string>('');
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [filtredPeoples, setFiltredPeoples] = useState(peopleFromServer);
+  const [inputValue, setInputValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [filteredPeople, setFilteredPeople] = useState<Person[]>(peopleFromServer);
+
+  const lastQueryRef = useRef(''); 
 
   const filterPeople = (inputFilterValue: string) => {
-    setFiltredPeoples(
-      peopleFromServer.filter(person => person.name.includes(inputFilterValue)),
+    const trimmedValue = inputFilterValue.trim();
+
+    if (trimmedValue === '') {
+      setFilteredPeople(peopleFromServer);
+      return;
+    }
+
+    const filtered = peopleFromServer.filter(person =>
+      person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
     );
+
+    setFilteredPeople(filtered);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newInputValue = event.target.value;
-
-    setInputValue(newInputValue);
-
+    const newValue = event.target.value;
+    setInputValue(newValue);
     onSelected(null);
+
+    if (!isOpen) {
+      setIsOpen(true);
+    }
   };
 
   const handleBlur = () => {
+    
     window.setTimeout(() => setIsOpen(false), 100);
   };
 
   useEffect(() => {
+    const trimmedValue = inputValue.trim();
+
+    if (trimmedValue === lastQueryRef.current) {
+      return;
+    }
+
+    lastQueryRef.current = trimmedValue;
+
     const timeout = setTimeout(() => {
-      filterPeople(inputValue);
-    }, 300);
+      filterPeople(trimmedValue);
+    }, delay);
 
     return () => clearTimeout(timeout);
-  }, [inputValue, filtredPeoples]);
+  }, [inputValue, delay, peopleFromServer]);
+
+  const showNoResults =
+    isOpen && filteredPeople.length === 0 && inputValue.trim() !== '';
 
   return (
     <div className={cn('dropdown', { 'is-active': isOpen })}>
@@ -52,14 +78,19 @@ export const Autocomplete: React.FC<Props> = ({
           data-cy="search-input"
           value={inputValue}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setIsOpen(true);
+            if (inputValue.trim() === '') {
+              filterPeople('');
+            }
+          }}
           onBlur={handleBlur}
         />
       </div>
 
       <div className="dropdown-menu" role="menu" data-cy="suggestions-list">
         <div className="dropdown-content">
-          {filtredPeoples.map(person => (
+          {filteredPeople.map(person => (
             <div
               key={person.slug}
               className="dropdown-item"
@@ -81,15 +112,15 @@ export const Autocomplete: React.FC<Props> = ({
             </div>
           ))}
 
-          {isOpen && filtredPeoples.length === 0 && inputValue !== '' && (
+          {showNoResults && (
             <div
               className="
-          notification
-          is-danger
-          is-light
-          mt-3
-          is-align-self-flex-start
-        "
+                notification
+                is-danger
+                is-light
+                mt-3
+                is-align-self-flex-start
+              "
               role="alert"
               data-cy="no-suggestions-message"
             >
